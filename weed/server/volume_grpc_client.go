@@ -2,6 +2,8 @@ package weed_server
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/chrislusf/seaweedfs/weed/glog"
@@ -28,6 +30,13 @@ func (vs *VolumeServer) heartbeat() {
 	}
 }
 
+func grpcAddr(master string) string {
+	vec := strings.Split(master, ":")
+	port, _ := strconv.Atoi(vec[1])
+
+	return vec[0] + ":" + strconv.Itoa(port+1)
+}
+
 func (vs *VolumeServer) doHeartbeat(sleepInterval time.Duration) error {
 
 	vs.masterNodes.Reset()
@@ -36,7 +45,9 @@ func (vs *VolumeServer) doHeartbeat(sleepInterval time.Duration) error {
 		return fmt.Errorf("No master found: %v", err)
 	}
 
-	grpcConection, err := grpc.Dial(masterNode, grpc.WithInsecure())
+	glog.V(0).Infof("dial...: %v", grpcAddr(masterNode))
+
+	grpcConection, err := grpc.Dial(grpcAddr(masterNode), grpc.WithInsecure())
 	if err != nil {
 		return fmt.Errorf("fail to dial: %v", err)
 	}
